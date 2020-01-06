@@ -1,6 +1,7 @@
 # include <stdio.h>
 # include <stdlib.h>
 # include <assert.h>
+# include <math.h>
 
 # define N   20
 # define DIM 3
@@ -19,6 +20,18 @@ typedef struct {
 typedef struct {
     Field_s* comp[DIM];
 } Field_v;
+
+typedef struct {
+    int num;
+    int cent;
+    int r;
+    int*    coord[DIM];
+    double* da[DIM];
+} Ball_pts;
+
+typedef struct {
+    double val[DIM];
+} Vector;
 
 Field_s* init_s(int grid_size) {
     Field_s* s   = (Field_s*) malloc(sizeof(Field_s));
@@ -276,6 +289,74 @@ void inner_bound_ball(Field_v* src, int r) {
     return;
 }
 
+Ball_pts* init_ball_pts(int r, int size) {
+    Ball_pts* b = malloc(sizeof(Ball_pts));
+    int pts_max = (int)(400 * M_PI * r * r);
+    int cent = size / 2;
+    b->r    = r;
+    b->num  = 0;
+    b->cent = cent;
+    for (int i = 0; i < DIM; ++i) {
+        b->coord[i] = malloc(sizeof(int) * pts_max);
+        b->da[i] = malloc(sizeof(double) * pts_max);
+    }
+    for (int i = 0; i < size; ++i)
+        for (int j = 0; j < size; ++j)
+            for (int k = 0; k < size; ++k) {
+                int dist_2 = (i - cent) * (i - cent) + (j - cent) * (j - cent) + (k - cent) * (k - cent);
+                double dist = sqrt(dist_2);
+                if (dist_2 >= r * r && dist_2 < (r + 1) * (r + 1)) {
+                    b->coord[0][b->num] = i;
+                    b->coord[1][b->num] = j;
+                    b->coord[2][b->num] = k;
+                    b->da[0][b->num] = (double)(i - cent) / r;
+                    b->da[1][b->num] = (double)(j - cent) / r;
+                    b->da[2][b->num] = (double)(k - cent) / r;
+                    ++(b->num);
+                }
+            }
+    return b;
+}
+
+Vector Comp_force_ball (Field_v* v, Field_s* p, double mu, Ball_pts* pts) {
+    Vector force;
+    for (int i = 0; i < DIM; ++i) 
+        force.val[i] = 0;
+    for (int n = 0; n < pts->num; ++n) {
+        int x = pts->coord[0][n];
+        int y = pts->coord[1][n];
+        int z = pts->coord[2][n];
+        double dax = pts->da[0][n];
+        double day = pts->da[1][n];
+        double daz = pts->da[2][n];
+
+        force.val[0] += -Val_s(p, x, y, z) * dax;
+        force.val[1] += -Val_s(p, x, y, z) * day;
+        force.val[2] += -Val_s(p, x, y, z) * daz;
+
+        force.val[0] += (Val_v(v, 0, x + 1, y, z) - Val_v(v, 0, x - 1, y, z)) / DX * dax;
+        force.val[1] += (Val_v(v, 1, x, y + 1, z) - Val_v(v, 1, x, y - 1, z)) / DX * day;
+        force.val[2] += (Val_v(v, 2, x, y, z + 1) - Val_v(v, 2, x, y, z - 1)) / DX * daz;
+
+        force.val[0] += (Val_v(v, 0, x, y + 1, z) - Val_v(v, 0, x, y - 1, z)) / 2.0 / DX * day;
+        force.val[0] += (Val_v(v, 0, x, y, z + 1) - Val_v(v, 0, x, y, z - 1)) / 2.0 / DX * daz;
+        force.val[1] += (Val_v(v, 1, x + 1, y, z) - Val_v(v, 1, x - 1, y, z)) / 2.0 / DX * dax;
+        force.val[1] += (Val_v(v, 1, x, y, z + 1) - Val_v(v, 1, x, y, z - 1)) / 2.0 / DX * daz;
+        force.val[2] += (Val_v(v, 2, x + 1, y, z) - Val_v(v, 2, x - 1, y, z)) / 2.0 / DX * dax;
+        force.val[2] += (Val_v(v, 2, x, y + 1, z) - Val_v(v, 2, x, y - 1, z)) / 2.0 / DX * day;
+
+        force.val[0] += (Val_v(v, 1, x + 1, y, z) - Val_v(v, 1, x - 1, y, z)) / 2.0 / DX * day;
+        force.val[0] += (Val_v(v, 2, x + 1, y, z) - Val_v(v, 2, x - 1, y, z)) / 2.0 / DX * daz;
+        force.val[1] += (Val_v(v, 0, x, y + 1, z) - Val_v(v, 0, x, y - 1, z)) / 2.0 / DX * dax;
+        force.val[1] += (Val_v(v, 2, x, y + 1, z) - Val_v(v, 2, x, y - 1, z)) / 2.0 / DX * daz;
+        force.val[2] += (Val_v(v, 0, x, y, z + 1) - Val_v(v, 0, x, y, z - 1)) / 2.0 / DX * dax;
+        force.val[2] += (Val_v(v, 1, x, y, z + 1) - Val_v(v, 1, x, y, z - 1)) / 2.0 / DX * day;
+    }
+    for (int i = 0; i < DIM; ++i) 
+        force.val[i] *= (4.0 * M_PI * pts->r * pts->r / pts->num);
+    return force;
+}
+
 int main () {
     //test_Lap_s();
     //test_Div();
@@ -314,6 +395,7 @@ int main () {
     Field_s* p         = init_s(N);
     Field_v* dp        = init_v(N);
     Field_v* dv        = init_v(N);
+    Ball_pts* pts      = init_ball_pts(4, N);
 
     for (int iter = 0; iter < ITER_MAX; ++iter) {
         int idx_now = iter % 2;
@@ -328,6 +410,8 @@ int main () {
         Arith_v(dp, pre_p_src, dv, -1.0 / rho, 1.0 / rho);
         Arith_v(v[idx_now], dv, v[idx_nxt], 1.0, DT);
         //inner_bound_rect(v[idx_nxt], 6);
+        inner_bound_ball(v[idx_nxt], 4);
+        Vector force = Comp_force_ball(v[idx_nxt], p, mu, pts);
         
         // print
 #define erase_display_all() printf("\033[2J");fflush(stdout)
@@ -353,6 +437,7 @@ int main () {
             }
             printf("\n");
         }
+        printf("\n%lf %lf %lf\n", force.val[0], force.val[1], force.val[2]);
     }
 
     return 0;
