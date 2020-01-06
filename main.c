@@ -360,6 +360,7 @@ Vector Comp_force_ball (Field_v* v, Field_s* p, double mu, Ball_pts* pts) {
 void Save_info (int iter, Field_v* v, Field_s* p, Vector force, FILE* fp) {
     fprintf(fp, "=====iter=%d\n=====", iter);
     fprintf(fp, "%.10lf %.10lf %.10lf\n", force.val[0], force.val[1], force.val[2]);
+    fflush(fp);
 }
 
 void Save_info_all (int iter, Field_v* v, Field_s* p, Vector force, FILE* fp) {
@@ -383,6 +384,7 @@ void Save_info_all (int iter, Field_v* v, Field_s* p, Vector force, FILE* fp) {
         }
     }
     fprintf(fp, "%.10lf %.10lf %.10lf\n", force.val[0], force.val[1], force.val[2]);
+    fflush(fp);
 }
 
 void compute_ball(double mu, double rho, double v0, int r) {
