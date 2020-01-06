@@ -8,7 +8,7 @@
 # define DX  1.0
 # define EPS 0.0000000001
 # define GAUSS_ITER_MAX  3000
-# define ITER_MAX 5000
+# define ITER_MAX 15000
 # define TEST_SIZE 20
 # define DT        0.01
 
@@ -357,10 +357,39 @@ Vector Comp_force_ball (Field_v* v, Field_s* p, double mu, Ball_pts* pts) {
     return force;
 }
 
+void Save_info (int iter, Field_v* v, Field_s* p, Vector force, FILE* fp) {
+    fprintf(fp, "=====iter=%d\n=====", iter);
+    fprintf(fp, "%.10lf %.10lf %.10lf\n", force.val[0], force.val[1], force.val[2]);
+}
+
+void Save_info_all (int iter, Field_v* v, Field_s* p, Vector force, FILE* fp) {
+    fprintf(fp, "=====iter=%d\n=====", iter);
+    for (int i = 0; i < N; ++i) {
+        for (int j = 0; j < N; ++j) {
+            for (int k = 0; k < N; ++k) {
+                fprintf(fp, "%.10lf", Val_s(p, i, j, k));
+            }
+            fprintf(fp, "\n");
+        }
+    }
+    for (int d = 0; d < DIM; ++d) {
+        for (int i = 0; i < N; ++i) {
+            for (int j = 0; j < N; ++j) {
+                for (int k = 0; k < N; ++k) {
+                    fprintf(fp, "%.10lf", Val_v(v, d, i, j, k));
+                }
+                fprintf(fp, "\n");
+            }
+        }
+    }
+    fprintf(fp, "%.10lf %.10lf %.10lf\n", force.val[0], force.val[1], force.val[2]);
+}
+
 void compute_ball(double mu, double rho, double v0, int r) {
     Field_v* v[2];
     v[0] = init_v(N);
     v[1] = init_v(N);
+    Field_s* p = init_s(N);
 
     // IC
     for (int i = 0; i < N; ++i) {
@@ -375,6 +404,7 @@ void compute_ball(double mu, double rho, double v0, int r) {
                         Val_v(v[0], s, i, j, k) = 0;
                         Val_v(v[1], s, i, j, k) = 0;
                     }
+                    Val_s(p, i, j, k) = 0;
                 }
             }
         }
@@ -384,15 +414,20 @@ void compute_ball(double mu, double rho, double v0, int r) {
     Field_v* res2      = init_v(N);
     Field_v* pre_p_src = init_v(N);
     Field_s* p_src     = init_s(N);
-    Field_s* p         = init_s(N);
     Field_v* dp        = init_v(N);
     Field_v* dv        = init_v(N);
     Ball_pts* pts      = init_ball_pts(5, N);
+    Vector force;
 
+    char filename[256] = "";
+    sprintf(filename, "%.2lf-%.2lf-%.2lf-%d", mu, rho, v0, r);
+    FILE* fp = fopen(filename, "w");
     for (int iter = 0; iter < ITER_MAX; ++iter) {
         int idx_now = iter % 2;
         int idx_nxt = (iter + 1) % 2;
-        
+
+        force = Comp_force_ball(v[idx_nxt], p, mu, pts);
+        Save_info(iter, v[idx_nxt], p, force, fp);
         Lap_v(v[idx_now], res1);
         Sub_D(v[idx_now], v[idx_now], res2);
         Arith_v(res1, res2, pre_p_src, mu, -rho);
@@ -403,43 +438,50 @@ void compute_ball(double mu, double rho, double v0, int r) {
         Arith_v(v[idx_now], dv, v[idx_nxt], 1.0, DT);
         //inner_bound_rect(v[idx_nxt], 6);
         inner_bound_ball(v[idx_nxt], 4);
-        Vector force = Comp_force_ball(v[idx_nxt], p, mu, pts);
-        
+        printf("%d\n", iter);
+
+# ifdef DEBUG
         // print
-#define erase_display_all() printf("\033[2J");fflush(stdout)
+# define erase_display_all() printf("\033[2J");fflush(stdout)
         erase_display_all();
         printf("%d\n", iter);
         for (int i = 0; i < N; ++i) {
             for (int j = 0; j < N; ++j) {
                 printf("%.3lf ", Val_v(v[idx_nxt], 0, i, j, N / 2));
                 /*
-                if (i >= 7 && i < 13 && j >= 7 && j < 13)
-                    //printf("\033[31m%.3lf ", Val_s(p, i, N / 2, j));
-                    printf("\033[31m%.3lf ", Val_v(v[idx_nxt], 0, i, N / 2, j));
+                   if (i >= 7 && i < 13 && j >= 7 && j < 13)
+                //printf("\033[31m%.3lf ", Val_s(p, i, N / 2, j));
+                printf("\033[31m%.3lf ", Val_v(v[idx_nxt], 0, i, N / 2, j));
                 else
-                    //printf("\033[37m%.3lf ", Val_s(p, i, N / 2, j));
-                    printf("\033[37m%.3lf ", Val_v(v[idx_nxt], 0, i, N / 2, j));
-                    */
+                //printf("\033[37m%.3lf ", Val_s(p, i, N / 2, j));
+                printf("\033[37m%.3lf ", Val_v(v[idx_nxt], 0, i, N / 2, j));
+                */
                 /*
-                if ((i - N / 2) * (i - N / 2) + (j - N / 2) * (j - N / 2) <= 25)
-                    printf("\033[31m%.3lf ", Val_v(v[0], 1, i, j, N / 2));
-                else
-                    printf("\033[37m%.3lf ", Val_v(v[0], 1, i, j, N / 2));
-                    */
+                   if ((i - N / 2) * (i - N / 2) + (j - N / 2) * (j - N / 2) <= 25)
+                   printf("\033[31m%.3lf ", Val_v(v[0], 1, i, j, N / 2));
+                   else
+                   printf("\033[37m%.3lf ", Val_v(v[0], 1, i, j, N / 2));
+                   */
             }
             printf("\n");
         }
         printf("\n%lf %lf %lf\n", force.val[0], force.val[1], force.val[2]);
+# endif
     }
-
+    Save_info_all(ITER_MAX, v[ITER_MAX % 2], p, force, fp);
 }
 
-int main () {
+int main (int argc, char *argv[]) {
     //test_Lap_s();
     //test_Div();
     //test_Sub_D();
     //test_Gauss();
     //test_Grad();
-    compute_ball(1.0, 1.0, 1.0, 5);
+    assert(argc == 5);
+    double mu  = atof(argv[1]);
+    double rho = atof(argv[2]);
+    double v0  = atof(argv[3]);
+    int r = atoi(argv[4]);
+    compute_ball(mu, rho, v0, r);
     return 0;
 } 
