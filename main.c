@@ -3,7 +3,7 @@
 # include <assert.h>
 # include <math.h>
 
-# define N   20
+# define N   40
 # define DIM 3
 # define DX  1.0
 # define EPS 0.0000000001
@@ -334,36 +334,30 @@ Vector Comp_force_ball (Field_v* v, Field_s* p, double mu, Ball_pts* pts) {
         force.val[1] += -Val_s(p, x, y, z) * day;
         force.val[2] += -Val_s(p, x, y, z) * daz;
 
-        force.val[0] += (Val_v(v, 0, x + 1, y, z) - Val_v(v, 0, x - 1, y, z)) / DX * dax;
-        force.val[1] += (Val_v(v, 1, x, y + 1, z) - Val_v(v, 1, x, y - 1, z)) / DX * day;
-        force.val[2] += (Val_v(v, 2, x, y, z + 1) - Val_v(v, 2, x, y, z - 1)) / DX * daz;
+        force.val[0] += (Val_v(v, 0, x + 1, y, z) - Val_v(v, 0, x - 1, y, z)) / DX * dax * mu;
+        force.val[1] += (Val_v(v, 1, x, y + 1, z) - Val_v(v, 1, x, y - 1, z)) / DX * day * mu;
+        force.val[2] += (Val_v(v, 2, x, y, z + 1) - Val_v(v, 2, x, y, z - 1)) / DX * daz * mu;
 
-        force.val[0] += (Val_v(v, 0, x, y + 1, z) - Val_v(v, 0, x, y - 1, z)) / 2.0 / DX * day;
-        force.val[0] += (Val_v(v, 0, x, y, z + 1) - Val_v(v, 0, x, y, z - 1)) / 2.0 / DX * daz;
-        force.val[1] += (Val_v(v, 1, x + 1, y, z) - Val_v(v, 1, x - 1, y, z)) / 2.0 / DX * dax;
-        force.val[1] += (Val_v(v, 1, x, y, z + 1) - Val_v(v, 1, x, y, z - 1)) / 2.0 / DX * daz;
-        force.val[2] += (Val_v(v, 2, x + 1, y, z) - Val_v(v, 2, x - 1, y, z)) / 2.0 / DX * dax;
-        force.val[2] += (Val_v(v, 2, x, y + 1, z) - Val_v(v, 2, x, y - 1, z)) / 2.0 / DX * day;
+        force.val[0] += (Val_v(v, 0, x, y + 1, z) - Val_v(v, 0, x, y - 1, z)) / 2.0 / DX * day * mu;
+        force.val[0] += (Val_v(v, 0, x, y, z + 1) - Val_v(v, 0, x, y, z - 1)) / 2.0 / DX * daz * mu;
+        force.val[1] += (Val_v(v, 1, x + 1, y, z) - Val_v(v, 1, x - 1, y, z)) / 2.0 / DX * dax * mu;
+        force.val[1] += (Val_v(v, 1, x, y, z + 1) - Val_v(v, 1, x, y, z - 1)) / 2.0 / DX * daz * mu;
+        force.val[2] += (Val_v(v, 2, x + 1, y, z) - Val_v(v, 2, x - 1, y, z)) / 2.0 / DX * dax * mu;
+        force.val[2] += (Val_v(v, 2, x, y + 1, z) - Val_v(v, 2, x, y - 1, z)) / 2.0 / DX * day * mu;
 
-        force.val[0] += (Val_v(v, 1, x + 1, y, z) - Val_v(v, 1, x - 1, y, z)) / 2.0 / DX * day;
-        force.val[0] += (Val_v(v, 2, x + 1, y, z) - Val_v(v, 2, x - 1, y, z)) / 2.0 / DX * daz;
-        force.val[1] += (Val_v(v, 0, x, y + 1, z) - Val_v(v, 0, x, y - 1, z)) / 2.0 / DX * dax;
-        force.val[1] += (Val_v(v, 2, x, y + 1, z) - Val_v(v, 2, x, y - 1, z)) / 2.0 / DX * daz;
-        force.val[2] += (Val_v(v, 0, x, y, z + 1) - Val_v(v, 0, x, y, z - 1)) / 2.0 / DX * dax;
-        force.val[2] += (Val_v(v, 1, x, y, z + 1) - Val_v(v, 1, x, y, z - 1)) / 2.0 / DX * day;
+        force.val[0] += (Val_v(v, 1, x + 1, y, z) - Val_v(v, 1, x - 1, y, z)) / 2.0 / DX * day * mu;
+        force.val[0] += (Val_v(v, 2, x + 1, y, z) - Val_v(v, 2, x - 1, y, z)) / 2.0 / DX * daz * mu;
+        force.val[1] += (Val_v(v, 0, x, y + 1, z) - Val_v(v, 0, x, y - 1, z)) / 2.0 / DX * dax * mu;
+        force.val[1] += (Val_v(v, 2, x, y + 1, z) - Val_v(v, 2, x, y - 1, z)) / 2.0 / DX * daz * mu;
+        force.val[2] += (Val_v(v, 0, x, y, z + 1) - Val_v(v, 0, x, y, z - 1)) / 2.0 / DX * dax * mu;
+        force.val[2] += (Val_v(v, 1, x, y, z + 1) - Val_v(v, 1, x, y, z - 1)) / 2.0 / DX * day * mu;
     }
     for (int i = 0; i < DIM; ++i) 
         force.val[i] *= (4.0 * M_PI * pts->r * pts->r / pts->num);
     return force;
 }
 
-int main () {
-    //test_Lap_s();
-    //test_Div();
-    //test_Sub_D();
-    //test_Gauss();
-    //test_Grad();
-    
+void compute_ball(double mu, double rho, double v0, int r) {
     Field_v* v[2];
     v[0] = init_v(N);
     v[1] = init_v(N);
@@ -374,8 +368,8 @@ int main () {
             for (int k = 0; k < N; ++k) {
                 for (int s = 0; s < DIM; ++s) {
                     if ((i == N - 1 || j == N - 1 || k == N - 1 || i == 0 || j == 0 || k == 0) && s == 0) {
-                        Val_v(v[0], s, i, j, k) = 1;
-                        Val_v(v[1], s, i, j, k) = 1;
+                        Val_v(v[0], s, i, j, k) = v0;
+                        Val_v(v[1], s, i, j, k) = v0;
                     }
                     else {
                         Val_v(v[0], s, i, j, k) = 0;
@@ -385,8 +379,6 @@ int main () {
             }
         }
     }
-    double rho = 1.0;
-    double mu  = 1.;
 
     Field_v* res1      = init_v(N);
     Field_v* res2      = init_v(N);
@@ -395,7 +387,7 @@ int main () {
     Field_s* p         = init_s(N);
     Field_v* dp        = init_v(N);
     Field_v* dv        = init_v(N);
-    Ball_pts* pts      = init_ball_pts(4, N);
+    Ball_pts* pts      = init_ball_pts(5, N);
 
     for (int iter = 0; iter < ITER_MAX; ++iter) {
         int idx_now = iter % 2;
@@ -440,5 +432,14 @@ int main () {
         printf("\n%lf %lf %lf\n", force.val[0], force.val[1], force.val[2]);
     }
 
-    return 0;
 }
+
+int main () {
+    //test_Lap_s();
+    //test_Div();
+    //test_Sub_D();
+    //test_Gauss();
+    //test_Grad();
+    compute_ball(1.0, 1.0, 1.0, 5);
+    return 0;
+} 
