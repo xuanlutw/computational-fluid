@@ -3,12 +3,12 @@
 # include <assert.h>
 # include <math.h>
 
-# define N   40
+# define N   41
 # define DIM 3
 # define DX  1.0
 # define EPS 0.0000000001
 # define GAUSS_ITER_MAX  3000
-# define ITER_MAX 15000
+# define ITER_MAX 50000
 # define TEST_SIZE 20
 # define DT        0.01
 
@@ -358,17 +358,17 @@ Vector Comp_force_ball (Field_v* v, Field_s* p, double mu, Ball_pts* pts) {
 }
 
 void Save_info (int iter, Field_v* v, Field_s* p, Vector force, FILE* fp) {
-    fprintf(fp, "=====iter=%d\n=====", iter);
+    fprintf(fp, "=====iter=%d=====\n", iter);
     fprintf(fp, "%.10lf %.10lf %.10lf\n", force.val[0], force.val[1], force.val[2]);
     fflush(fp);
 }
 
 void Save_info_all (int iter, Field_v* v, Field_s* p, Vector force, FILE* fp) {
-    fprintf(fp, "=====iter=%d\n=====", iter);
+    fprintf(fp, "=====iter=%d=====\n", iter);
     for (int i = 0; i < N; ++i) {
         for (int j = 0; j < N; ++j) {
             for (int k = 0; k < N; ++k) {
-                fprintf(fp, "%.10lf", Val_s(p, i, j, k));
+                fprintf(fp, "%.10lf ", Val_s(p, i, j, k));
             }
             fprintf(fp, "\n");
         }
@@ -377,7 +377,7 @@ void Save_info_all (int iter, Field_v* v, Field_s* p, Vector force, FILE* fp) {
         for (int i = 0; i < N; ++i) {
             for (int j = 0; j < N; ++j) {
                 for (int k = 0; k < N; ++k) {
-                    fprintf(fp, "%.10lf", Val_v(v, d, i, j, k));
+                    fprintf(fp, "%.10lf ", Val_v(v, d, i, j, k));
                 }
                 fprintf(fp, "\n");
             }
