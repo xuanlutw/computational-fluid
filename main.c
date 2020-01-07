@@ -3,12 +3,12 @@
 # include <assert.h>
 # include <math.h>
 
-# define N   41
+# define N   61
 # define DIM 3
 # define DX  1.0
 # define EPS 0.0000000001
 # define GAUSS_ITER_MAX  3000
-# define ITER_MAX 50000
+# define ITER_MAX 100000
 # define TEST_SIZE 20
 # define DT        0.01
 
