@@ -418,7 +418,7 @@ void compute_ball(double mu, double rho, double v0, int r) {
     Field_s* p_src     = init_s(N);
     Field_v* dp        = init_v(N);
     Field_v* dv        = init_v(N);
-    Ball_pts* pts      = init_ball_pts(5, N);
+    Ball_pts* pts      = init_ball_pts(r, N);
     Vector force;
 
     char filename[256] = "";
@@ -439,7 +439,7 @@ void compute_ball(double mu, double rho, double v0, int r) {
         Arith_v(dp, pre_p_src, dv, -1.0 / rho, 1.0 / rho);
         Arith_v(v[idx_now], dv, v[idx_nxt], 1.0, DT);
         //inner_bound_rect(v[idx_nxt], 6);
-        inner_bound_ball(v[idx_nxt], 4);
+        inner_bound_ball(v[idx_nxt], r);
         printf("%d\n", iter);
 
 # ifdef DEBUG
