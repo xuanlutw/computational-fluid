@@ -8,7 +8,7 @@
 # define DX  1.0
 # define EPS 0.0000000001
 # define GAUSS_ITER_MAX  3000
-# define ITER_MAX 100000
+# define ITER_MAX 50000
 # define TEST_SIZE 20
 # define DT        0.01
 
